@@ -9,10 +9,28 @@ MESSAGES = {
 	"es": "Hola mundo",
 }
 
+FLAG_PREFIX = "APP_FLAG_"
+
+
+def get_flag(name: str) -> bool:
+	raw_value = os.getenv(f"{FLAG_PREFIX}{name.upper()}", "false").strip().lower()
+	return raw_value in {"1", "true", "yes", "on"}
+
 
 def get_language(cli_language: str | None) -> str:
 	language = (cli_language or os.getenv("APP_LANG", "es")).strip().lower()
 	return language if language in MESSAGES else "en"
+
+
+def build_message(language: str) -> str:
+	message = MESSAGES[language]
+	if get_flag("experimental_greeting"):
+		extra = {
+			"en": "Feature flag active: experimental greeting enabled.",
+			"es": "Bandera activa: saludo experimental habilitado.",
+		}[language]
+		return f"{message}\n{extra}"
+	return message
 
 
 def main() -> None:
@@ -21,7 +39,7 @@ def main() -> None:
 	args = parser.parse_args()
 
 	language = get_language(args.lang)
-	print(MESSAGES[language])
+	print(build_message(language))
 
 
 if __name__ == "__main__":
